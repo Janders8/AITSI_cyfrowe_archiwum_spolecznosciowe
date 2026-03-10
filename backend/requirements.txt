@@ -1,0 +1,16 @@
+# Framework do budowy API
+fastapi
+# Serwer lokalny do uruchomienia kodu FastAPI
+uvicorn
+# Biblioteka do komunikacji z bazą danych
+sqlalchemy
+# do logowania za pomocą google
+google-auth
+# obsługa tokenów JWT
+PyJWT
+# do obsługi plików
+python-multipart
+# do komunikacji z google
+requests
+# ladowanie ukrytych plikow .env
+python-dotenv

@@ -1,0 +1,70 @@
+/* 
+    Plik ze stylami przeznaczony do trybu wysokiego kontrastu. 
+    Bazuje na trybie ciemnym Bootstrapa, ale nadpisuje najważniejsze elementy
+*/
+
+/* Główne kolory tła i tekstu dla strony */
+html.wysoki-kontrast {
+    --bs-body-bg: #000000;
+    --bs-body-color: #ffff00;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Formatowanie hiperłączy */
+html.wysoki-kontrast a {
+    color: #00ffff !important;
+    text-decoration: underline !important;
+}
+
+/* Czarne napisy na zielonym tle przy akcjach pozytywnych*/
+html.wysoki-kontrast .btn-success {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+    border-color: #00ff00 !important;
+    font-weight: bold;
+}
+
+/* Czarne napisy na żółtym tle przy akcjach głównych*/
+html.wysoki-kontrast .btn-primary {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00 !important;
+    font-weight: bold;
+}
+
+/* Rozwijane listy i przyciski nakreślające obrys - żółty kolor nawigacyjny */
+html.wysoki-kontrast .btn-outline-primary {
+    color: #ffff00 !important;
+    border-color: #ffff00 !important;
+}
+
+/* Karty galerii zdjęć - oddzielone żółtymi grubymi ramkami od ciemnego tła  */
+html.wysoki-kontrast .card {
+    background-color: #111111 !important;
+    border: 2px solid #ffff00 !important;
+}
+
+/* Stopka kart - żółta linia odcinająca od obrazu */
+html.wysoki-kontrast .card-footer {
+    border-top: 1px solid #ffff00 !important;
+}
+
+/* Zamiana szarych tekstów pobocznych na jaśniejszy */
+html.wysoki-kontrast .text-muted,
+html.wysoki-kontrast .text-body-secondary {
+    color: #dddddd !important;
+}
+
+/* Informacyjne alerty - cyjanowa czcionka */
+html.wysoki-kontrast .alert-info {
+    background-color: #000000 !important;
+    color: #00ffff !important;
+    border: 2px solid #00ffff !important;
+}
+
+/* Alerty błędów - jaskrawa czerwień na ramce i tekście */
+html.wysoki-kontrast .alert-danger {
+    background-color: #000000 !important;
+    color: #ff3333 !important;
+    border: 2px solid #ff3333 !important;
+}
