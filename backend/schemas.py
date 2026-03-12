@@ -9,8 +9,8 @@ from datetime import datetime
 
 # schematy zdjęcia
 
+# Informacje o zdjęciu. Szablon z którego korzystają inne schematy.
 class MaterialBase(BaseModel):
-    """Zbiór podstawowych informacji o zdjęciu. Szablon z którego korzystają inne schematy."""
     title: str
     category: str
     description: Optional[str] = None
@@ -18,8 +18,8 @@ class MaterialBase(BaseModel):
     location_lng: Optional[float] = None
     historical_period: Optional[str] = None
 
+# Schemat do edycji zdjęcia.
 class MaterialUpdate(BaseModel):
-    """Schemat do edycji zdjęcia."""
     title: Optional[str] = None
     category: Optional[str] = None
     description: Optional[str] = None
@@ -27,12 +27,12 @@ class MaterialUpdate(BaseModel):
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
 
+# Filtr sprawdzający dane z formularza "Dodaj Zdjęcie" wypełnianego przez Twórcę.
 class MaterialCreate(MaterialBase):
-    """Filtr sprawdzający dane z formularza "Dodaj Zdjęcie" wypełnianego przez Twórcę."""
     pass
 
+# Krótki słownik na dane publiczne twórcy
 class UserBasicInfo(BaseModel):
-    """Krótki słownik na dane publiczne twórcy"""
     id: int
     name: str
     email: str
@@ -41,9 +41,9 @@ class UserBasicInfo(BaseModel):
     class Config:
         from_attributes = True
 
+# To co serwer zwraca użytkownikowi przeglądającemu stronę.
+# Dodaje serwerowe ID i datę i dane autora.
 class Material(MaterialBase):
-    """To co serwer zwraca użytkownikowi przeglądającemu stronę.
-    Dodaje serwerowe ID i datę i dane autora."""
     id: int
     filename: str
     upload_date: datetime
@@ -51,7 +51,7 @@ class Material(MaterialBase):
     # Dane autora
     owner: UserBasicInfo 
 
-    # To pozwala czytać z obiektów bazy, a nie tylko ze słowników
+    # Pozwala Pydanticowi pobierać dane bezpośrednio z rekordów bazy danych
     class Config:
         from_attributes = True 
 
@@ -59,27 +59,26 @@ class Material(MaterialBase):
 
 # schematy użytkownika i autoryzacji
 
+# Schemat oczekujący na token od Google po zalogowaiu się przez konto google
 class GoogleToken(BaseModel):
-    """Schemat oczekujący na token od Google po zalogowaiu się przez konto google"""
     credential: str
 
+# Zwracany przez API token wewnętrzny
 class TokenResponse(BaseModel):
-    """Zwracany przez API token wewnętrzny"""
     access_token: str
     token_type: str
 
-
+# Podstawowe informacje o człowieku. Szablon z którego korzystają inne klasy.
 class UserBase(BaseModel):
-    """Podstawowe informacje o człowieku. Szablon z którego korzystają inne klasy."""
     email: str
     name: str
 
+# Filtr sprawdzający dane podczas pierwszej rejestracji przez powiązanie z kontem Google.
 class UserCreate(UserBase):
-    """Filtr sprawdzający dane podczas pierwszej rejestracji przez powiązanie z kontem Google."""
     google_id: str
 
+# Pełne dane o użytkowniku po pobraniu ich z Bazy Danych i odesłaniu stronom.
 class User(UserBase):
-    """Pełne dane o użytkowniku po pobraniu ich z Bazy Danych i odesłaniu stronom."""
     id: int
     role: str
     is_blocked: bool

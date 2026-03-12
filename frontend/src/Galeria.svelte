@@ -1,4 +1,8 @@
 <script>
+    // Komponent odpowiedzialny za wyświetlanie zdjęć z bazy na stronie głównej.
+    // Pobiera materiały z API na podstawie filtrów (tekst, kategoria, współrzędne mapy)
+    // i rysuje je w formie grida.
+
     import { onMount } from "svelte";
 
     // Zmienna przechowująca pobrane zdjęcia z backendu
@@ -8,7 +12,7 @@
     // Zmienna na ewentualne błędy przy pobieraniu
     let blad = null;
 
-    // Wstrzyknięty "Prop" z wyższego komponentu (App.svelte)
+    // Prop z App.svelte
     export let aktywneFiltry = {
         search: "",
         category: "",
@@ -25,11 +29,10 @@
         blad = null;
 
         try {
-            // Obiekt URL (punkt startowy API dla zasobów publicznych)
+            // URL do API
             const url = new URL("http://localhost:8000/materials/");
 
-            // Doklejanie Parametrów do uderzenia do backendu
-            // Np. zamieni słownik w "?search=Kosciol&category=Fotografia"
+            // Dodanie parametrów do URL
             if (filtryPowiazane.search)
                 url.searchParams.append("search", filtryPowiazane.search);
             if (filtryPowiazane.category)
@@ -45,14 +48,14 @@
                 filtryPowiazane.min_lat !== undefined &&
                 filtryPowiazane.min_lat !== null
             ) {
-                // Konwersja by uniknąć błędów ułamków URL
+                // Konwersja by uniknąć błędów ułamków w URL
                 url.searchParams.append("min_lat", filtryPowiazane.min_lat);
                 url.searchParams.append("max_lat", filtryPowiazane.max_lat);
                 url.searchParams.append("min_lng", filtryPowiazane.min_lng);
                 url.searchParams.append("max_lng", filtryPowiazane.max_lng);
             }
 
-            // Właściwy Fetch pod wygenerowany z filtrów adres
+            // Zapytanie do API
             const odpowiedz = await fetch(url);
 
             if (!odpowiedz.ok) {
@@ -60,15 +63,13 @@
                 if (odpowiedz.status === 404) {
                     materialy = [];
                     poPobraniuMaterialow([]);
-                    // Return zatrzymuje dalsze przetwarzanie
+
                     return;
                 }
-                throw new Error(
-                    "Wystąpił zewnętrzny błąd serwera przy pobieraniu zdjęć",
-                );
+                throw new Error("Wystąpił błąd serwera przy pobieraniu zdjęć");
             }
 
-            // Rozpakowanie nadesłanej Listy w formacie Json
+            // Odpakowanie listy zdjęć
             materialy = await odpowiedz.json();
             poPobraniuMaterialow(materialy);
         } catch (error) {
@@ -82,7 +83,7 @@
     $: pobierzZdjecia(aktywneFiltry);
 </script>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
+<div class="row row-cols-3 g-4">
     {#if laduje}
         <div class="col-12 text-center">
             <!-- Spinner reprezentujący ładowanie -->
@@ -99,7 +100,7 @@
     {:else if materialy.length === 0}
         <div class="col-12">
             <div class="alert alert-info" role="alert">
-                Brak zdjęć w archiwach!
+                Brak zdjęć z podanymi kryteriami.
             </div>
         </div>
     {:else}
@@ -107,7 +108,7 @@
         {#each materialy as material}
             <div class="col">
                 <div class="card h-100 shadow-sm">
-                    <!-- Ładowanie obrazu z folderu uploads -->
+                    <!-- Ładowanie zdjęcia z folderu uploads -->
                     {#if material.filename}
                         <img
                             src={`http://localhost:8000/uploads/${material.filename}`}
@@ -125,7 +126,7 @@
                         </div>
                     {/if}
                     <div class="card-body">
-                        <h5 class="card-title">{material.title}</h5>
+                        <h3 class="card-title h5">{material.title}</h3>
                         <!-- Zadbanie by nie wyświetlało pustego podpisu -->
                         {#if material.description}
                             <p class="card-text text-truncate">
@@ -133,10 +134,17 @@
                             </p>
                         {/if}
                     </div>
-                    <div class="card-footer bg-transparent">
+                    <div
+                        class="card-footer bg-transparent d-flex justify-content-between align-items-center"
+                    >
                         <small class="text-body-secondary">
                             {material.category}
                         </small>
+                        {#if material.historical_period}
+                            <span class="badge rounded-pill bg-info text-dark">
+                                {material.historical_period}
+                            </span>
+                        {/if}
                     </div>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 // Plik służący jako pamięć globalna aplikacji
-// PRzechowuje m.in. token JWT, rolę użytkownika i email użytkownika
+// Przechowuje m.in. token JWT, rolę użytkownika i email użytkownika
 
 // Zmienna przechowująca klucz JWT otrzymany z API backendu
 export const tokenJWT = writable(null);

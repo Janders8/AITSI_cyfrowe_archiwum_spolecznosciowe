@@ -7,7 +7,6 @@ oraz definiowanie endpointów.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import pozostałch modułów
 import os
 import shutil
 import uuid
@@ -23,6 +22,8 @@ from typing import List, Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
+from dotenv import load_dotenv
+
 # Obsługa statycznych plików na serwerze (do wyświetlania zdjęć)
 from fastapi.staticfiles import StaticFiles
 
@@ -34,10 +35,9 @@ def get_db():
     finally:
         db.close()
 
+# Funkcja zwracająca pełen profil użytkownika, m.in. z jego rolą.
 def get_current_user(email: str = Depends(auth.verify_token), db: Session = Depends(get_db)):
-    """
-    Funkcja zwracająca pełen profill użytkownika, m.in. z jego rolą.
-    """
+
     # Wyszukanie użytkownika w bazie danych
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
@@ -50,10 +50,10 @@ def get_current_user(email: str = Depends(auth.verify_token), db: Session = Depe
     return user
 
 # Tworzenie Tabel
-# SQLAlchemy wczytuje plik models.py i generuje na jego podstawie tabele w archiwum.db o ile jeszcze nie istnieją
+# Generowanie na podstawie models.py tabel w archiwum.db o ile jeszcze nie istnieją
 models.Base.metadata.create_all(bind=engine)
 
-# Utworzenie aplikacji 
+# Utworzenie aplikacji odpowiadającej za API
 app = FastAPI(
     title="Cyfrowe Archiwum Społecznościowe",
     description="API dla projektu archiwum społecznościowego.",
@@ -61,7 +61,7 @@ app = FastAPI(
 )
 
 # Konfiguracja CORS
-# pozwalam zdefiniowanym stronom na łączenie się z serwerem serwisu.
+# Zdefiniowane strony mogą łączyć się z wybranymi adresami.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], 
@@ -78,26 +78,18 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 # Próbny endpoint dla testów.
 @app.get("/")
 def test_status_serwera():
-    return {"message": "Serwer i Baza działają! :)"}
+    return {"message": "Serwer i Baza odpowiadają"}
 
 
 
-# Logowanie przez Google
-from dotenv import load_dotenv
-import os
-
-# Wskazanie ścieżki do pliku .env na frontendzie (tamten zawiera klucz google)
+# Wskazanie ścieżki do pliku .env na frontendzie (tam jest klucz google)
 load_dotenv(dotenv_path="../frontend/.env")
+# Klucz z .env
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
-# Klucz ladowany z .env
-GOOGLE_CLIENT_ID = os.getenv("VITE_GOOGLE_CLIENT_ID")
-
+# Funkcja do weryfikacji tokenu Google, tworzenia nowego konta (jeśłi nie istnieje) oraz generowania tokenu JWT.
 @app.post("/auth/google", response_model=schemas.TokenResponse)
 def auth_google(token_data: schemas.GoogleToken, db: Session = Depends(get_db)):
-    """
-Funkcja do weryfikacji tokenu Google, tworzenia nowego konta (jeśłi potrzeba) oraz generowania tokenu JWT.
-
-    """
     try:
         # sprawdzenie autentyczności tokenu
         idinfo = id_token.verify_oauth2_token(
@@ -127,9 +119,9 @@ Funkcja do weryfikacji tokenu Google, tworzenia nowego konta (jeśłi potrzeba) 
             db.commit()
             db.refresh(user)
         else:
-            # Sprawdzenie czy Administrator nie zablokował użytkownika!
+            # Sprawdzenie czy użytkownik nie jest zablokowany
             if user.is_blocked:
-                raise HTTPException(status_code=403, detail="Konto zostało zablokowane przez Administratora.")
+                raise HTTPException(status_code=403, detail="Konto zostało zablokowane.")
 
         # Wygenerowanie tokenu dla podanego maila i roli
         access_token = auth.create_access_token(
@@ -146,6 +138,7 @@ Funkcja do weryfikacji tokenu Google, tworzenia nowego konta (jeśłi potrzeba) 
 
 # Prywatne API (Dla twórców i administratorów)
 
+# Funkcja Do tworzenia nowego zdjęcia w archiwum. 
 @app.post("/materials/", response_model=schemas.Material)
 def create_material(
         title: str = Form(...),
@@ -158,9 +151,6 @@ def create_material(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Funkcja Do tworzenia nowego zdjęcia w archiwum. 
-    """
 
     # Sprawdzenie ról
     if current_user.role not in ["Twórca", "Administrator"]:
@@ -169,7 +159,7 @@ def create_material(
     # Zachowanie rozszerzenia zdjęcia
     file_extension = file.filename.split(".")[-1]
     
-    # Generowanie losowej nazwy pliku (by na dysku nie nadpisać zdjęcia)
+    # Generowanie losowej nazwy pliku do przechowywania na dysku serwera
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
     # Pełna ścieżka do zapisania zdjęcia
@@ -198,22 +188,19 @@ def create_material(
 
     return new_material
 
-
+# Funkcja pozwalająca zalogowanemu Twórcy pobrać wyłącznie jego materiały
 @app.get("/materials/my", response_model=List[schemas.Material])
 def get_my_materials(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Funkcja pozwalająca zalogowanemu Twórcy pobrać wyłącznie jego materiały
-    """
-    
+
     # Filtracja tylko tych materiałów, gdzie ID właściciela jest równe ID aktualnie zalogowanego użytkownika
     my_materials = db.query(models.Material).filter(models.Material.owner_id == current_user.id).all()
     
     return my_materials
 
-
+# Funkcja edycji materiału przez użytkownika.
 @app.put("/materials/{material_id}", response_model=schemas.Material)
 def update_material(
         material_id: int, 
@@ -221,10 +208,6 @@ def update_material(
         db: Session = Depends(get_db), 
         current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Funkcja edycji materiału przez użytkownika.
-    """
-
     # Znalezienie materiału w bazie
     material = db.query(models.Material).filter(models.Material.id == material_id).first()
     
@@ -248,15 +231,13 @@ def update_material(
 
     return material
 
+# Funkcja do kasowania zdjęć. 
 @app.delete("/materials/{material_id}")
 def delete_material(
         material_id: int, 
         db: Session = Depends(get_db), 
         current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Funkcja do kasowania zdjęć. 
-    """
     # Wyszukanie zdjęcia
     material = db.query(models.Material).filter(models.Material.id == material_id).first()
     if not material:
@@ -275,22 +256,19 @@ def delete_material(
     db.delete(material)
     db.commit()
 
-    return {"message": "Zdjęcie i dane wykasowane z serwera."}
+    return {"message": "Zdjęcie wykasowane z serwera."}
 
+# Funkcja do blokowania Twórcy przez Administratora 
+# Uniemożliwia to Twórcy zalogowanie do serwisu.
 @app.patch("/users/{user_id}/block")
 def block_user(
         user_id: int, 
         db: Session = Depends(get_db), 
         current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Funkcja do blokowania użtkownika przez Administratora 
-    Uniemożliwia to użytkownikowi zalogowanie do serwisu.
-
-    """
     # Sprawdzenie czy to administratory
     if current_user.role != "Administrator":
-        raise HTTPException(status_code=403, detail="Tylko Administrator może korzystać z panelu blokowania kont.")
+        raise HTTPException(status_code=403, detail="Tylko Administrator może blokować Twórców.")
 
     # Znalezienie blokowanego użytkownika
     user_to_block = db.query(models.User).filter(models.User.id == user_id).first()
@@ -302,12 +280,13 @@ def block_user(
     db.commit()
     
 
-    return {"message": f"Użytkownik {user_to_block.email} został zablokowany."}
+    return {"message": f"Twórca {user_to_block.email} został zablokowany."}
 
 
 # Publiczne api (nie wymagające uprawnień)
 
-
+# Pobiera i filtruje listę materiałów. 
+# Wspiera m.in. proste szukanie obszarowe Bounding Box (po lat i lng). 
 @app.get("/materials/", response_model=List[schemas.Material])
 def get_materials(
     skip: int = 0,
@@ -319,14 +298,10 @@ def get_materials(
     max_lat: Optional[float] = Query(None, description="Maksymalna szerokość geograficzna (góra mapy)"),
     min_lng: Optional[float] = Query(None, description="Minimalna długość geograficzna (lewo mapy)"),
     max_lng: Optional[float] = Query(None, description="Maksymalna długość geograficzna (prawo mapy)"),
-    db: Session = Depends(get_db) # Wykorzystanie funkcji get_db do otwierania i zamykania połączenia z bazą
+    db: Session = Depends(get_db)
 ):
-    """
-    Pobiera i filtruje listę materiałów. 
-    Wspiera proste szukanie obszarowe Bounding Box (po lat i lng). 
-    """
-    
-    # Budowa zapytania
+
+    # Początek zapytania do bazy danych
     query = db.query(models.Material)
 
     # Filtry użytkownika
@@ -335,17 +310,16 @@ def get_materials(
         query = query.filter(models.Material.category.startswith(category))
         
     if search:
-        # Wyszukuje bez względu na wielkość liter w tytule zdjęcia
+        # Wyszukuje bez względu na wielkość liter
         query = query.filter(models.Material.title.ilike(f"%{search}%"))
         
     if historical_period:
-        # Zwykłe dopasowanie do podanego okresu
+        # Dopasowanie do podanego okresu
         query = query.filter(models.Material.historical_period == historical_period)
 
-    # Logika wyszukiwania po widocznej lokalizacji
+    # Logika wyszukiwania po lokalizacji
     if min_lat is not None and max_lat is not None and min_lng is not None and max_lng is not None:
         
-        # Filtracja bazy po widocznym kwadracie mapy
         query = query.filter(
             models.Material.location_lat >= min_lat,
             models.Material.location_lat <= max_lat,
@@ -353,10 +327,10 @@ def get_materials(
             models.Material.location_lng <= max_lng
         )
 
-    # Wysłanie zbudowanego zapytania do bazy 
-    materials = query.offset(skip).limit(limit).all()
+    # Wysłanie zbudowanego zapytania do bazy, sortowanie od najnowszych
+    materials = query.order_by(models.Material.upload_date.desc()).offset(skip).limit(limit).all()
     
-    # Obsługa błędów, jeśli nic nie ma
+    # Gdy nie ma zdjęć spełniających filtrów
     if not materials and (search or category or historical_period or min_lat is not None):
         params_info = []
         if search: params_info.append(f"tekstem: '{search}'")
@@ -367,10 +341,9 @@ def get_materials(
     
     return materials
 
-
+# Pobiera jeden konkretny materiał po jego ID
 @app.get("/materials/{material_id}", response_model=schemas.Material)
 def get_material(material_id: int, db: Session = Depends(get_db)):
-    """Pobiera jeden konkretny materiał po jego ID."""
     
     # Zwrócenie jednego wyniku
     db_material = db.query(models.Material).filter(models.Material.id == material_id).first()

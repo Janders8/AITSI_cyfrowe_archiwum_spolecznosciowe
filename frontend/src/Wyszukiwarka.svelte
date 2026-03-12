@@ -1,6 +1,9 @@
 <script>
+    // Formularz do filtrowania zdjęć po frazie, kategorii i okresie historycznym.
+    // Po zatwierdzeniu przekazuje wybrane filtry do komponentu App.svelte.
+
     // Miejsce na funkcję przekazaną z zewnątrz, służy do zgłaszania zmian filtrów
-    export let poZmianieFiltru = () => {};
+    export let poZmianieFiltru = (_filtry) => {};
 
     // Zmienne formularza filtrującego
     let search = "";
@@ -26,7 +29,7 @@
         category = "";
         historical_period = "";
 
-        // Puste wartości oznaczają prośbę o całą galerię
+        // Puste wartości, prośba o całą galerię
         poZmianieFiltru({
             search: "",
             category: "",
@@ -37,14 +40,14 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <h5 class="card-title fw-bold mb-3">Wyszukiwarka w Archiwum</h5>
+        <h2 class="card-title fw-bold mb-3">Wyszukiwarka w Archiwum</h2>
 
         <!-- Główny Formularz z filtrami. Po wysłaniu uruchamia funkcję wyszukaj() -->
         <form on:submit={wyszukaj} class="row g-3">
-            <!-- Zwykłe wyszukiwanie w Tytule/Opisie -->
+            <!-- Wyszukiwanie w Tytule/Opisie -->
             <div class="col-md-5">
                 <label for="szukanaFraza" class="form-label text-muted small"
-                    >Szukana Fraza</label
+                    >Szukana fraza</label
                 >
                 <input
                     type="text"
@@ -66,6 +69,9 @@
                     bind:value={category}
                 >
                     <!-- Pusta kategoria traktowana jest jako podanie wszystkich wyników -->
+
+                    <!-- Przy rzowoju projektu wypadałoby zrobić te kategorie dynamicznie, 
+                    na podstawie dostępnych kategorii w API -->
                     <option value="">Wszystkie</option>
                     <option value="/Architektura/"
                         >-- Cała Architektura --</option
@@ -115,7 +121,7 @@
             <div class="col-12 d-flex justify-content-end gap-2 mt-3">
                 <button
                     type="button"
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     on:click={wyczysc}>Wyczyść Filtry</button
                 >
                 <button

@@ -1,4 +1,9 @@
 <script>
+    // Komponent z interaktywną mapą z biblioteki Leaflet i z mapami
+    // z OpenStreetMap.
+    // Po przesunięciu mapy odczytuje widoczny obszar
+    // i przekazuje współrzędne do App.svelte, który filtruje zdjęcia po lokalizacji.
+
     import { onMount } from "svelte";
 
     // Miejsce na funkcję od która informuje o zmianie współrzędnych mapy modół główny
@@ -7,16 +12,16 @@
     // Lista zdjęć z API do wyświetlenia na mapie
     export let materialy = [];
 
-    // Referencja do div'a w HTML, wewnątrz którego umieszczona zostanie mapa
+    // Referencja do diva wewnątrz którego umieszczona zostanie mapa
     let divMiejscNaMape;
 
     // Zmienna przechowująca obiekt z kodem mapy
     let instancjaMapy;
 
-    // Grupa znaczników
+    // Markery
     let warstwaMarkerow;
 
-    // Początkowe współrzędne mapy
+    // Początkowe współrzędne mapy (Warszawa)
     const startLat = 52.23;
     const startLng = 21.01;
     const startZoom = 13;
@@ -28,19 +33,19 @@
             startZoom,
         );
 
-        // Podkład mapy, wybrano darmowy OpenStreetMap
+        // Podkład mapy, wykorzystano darmowy OpenStreetMap
         window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution:
                 '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(instancjaMapy);
 
-        // Stworzenie pustej warstwy pinesek
+        // Inicjalizacja pustej warstwy pinesek
         warstwaMarkerow = window.L.layerGroup().addTo(instancjaMapy);
 
         // Kiedy użytkownik skończy przesuwać mapę
         instancjaMapy.on("moveend", () => {
-            // Pobranie aktualnych krawędzi okna mapy (Bounding Box)
+            //aktualne krawędzie mapy (Bounding Box)
             const graniceMapy = instancjaMapy.getBounds();
 
             // Przekazanie współrzędnych do modułu głównego
@@ -52,7 +57,7 @@
             });
         });
 
-        // Wysłanie wstępnych koordynatów obszarowych na start
+        // Wysłanie wstępnych koordynatów
         const graniceStartowe = instancjaMapy.getBounds();
         poZmianieMapy({
             min_lat: graniceStartowe.getSouth(),
@@ -62,7 +67,7 @@
         });
     });
 
-    // Ten kod wywoła się sam zawsze kiedy podmienione zostaną materiały
+    // Kod wywoływany przy zmianie materiałów
     $: if (warstwaMarkerow && materialy) {
         // Zdejmij wszystkie stare pineski
         warstwaMarkerow.clearLayers();
@@ -96,12 +101,12 @@
 <!-- Kontener dla mapy -->
 <div class="card shadow-sm mb-4">
     <div class="card-header">
-        <h5 class="card-title fw-bold m-0">
+        <h2 class="card-title fw-bold m-0">
             Wyszukiwanie Współrzędnych Przestrzenne
-        </h5>
+        </h2>
     </div>
     <div class="card-body p-0">
-        <!-- Leaflet potrzebuje, aby div miał określoną z góry wysokość, inaczej
+        <!-- Leaflet wymaga, aby div miał określoną wysokość, inaczej
           mapa zniknie z ekranu (minimum 400 pikseli) -->
         <div
             bind:this={divMiejscNaMape}

@@ -12,8 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Sekretny klucz szyfrowania uzyskany z .env
-
+# Sekretny klucz szyfrowania uzyskany z pliku .env
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Wybrany algorytm kodowania
@@ -28,11 +27,11 @@ security = HTTPBearer()
 def create_access_token(data: dict):
     """
     Funkcja przyjmuje słownik, dodaje do niego datę ważności
-    i zabezpiecza tajnym kodem, zwracając token do użytku wewnątrz serwisu.
+    i zabezpiecza kodem, zwracając token do użytku wewnątrz serwisu.
     """
     to_encode = data.copy()
     
-    # Kiedy token wygaśnie
+    # Ustawienie czasu wygaśnięcia tokenu
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     

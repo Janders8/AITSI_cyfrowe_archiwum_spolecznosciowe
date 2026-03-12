@@ -1,5 +1,5 @@
 """
-Plik zawiera definicje tabel, które fizycznie powstaną w relacyjnej bazie danych SQLite.
+Plik zawiera definicje tabel, które powstaną w relacyjnej bazie danych SQLite.
 """
 
 import datetime
@@ -16,13 +16,13 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
-    google_id = Column(String, unique=True, index=True, nullable=True) # ID z Google OAuth
+    google_id = Column(String, unique=True, index=True, nullable=True)
     email = Column(String, unique=True, index=True)
     name = Column(String)
-    role = Column(String, default="Twórca") # Role: "Administrator", "Twórca"
+    role = Column(String, default="Twórca")
     is_blocked = Column(Boolean, default=False) 
 
-    # Relacja jeden-do-wielu twórca z jego materiałem
+    # Relacja jeden-do-wielu, twórca z jego materiałem
     materials = relationship("Material", back_populates="owner")
 
 
@@ -34,15 +34,18 @@ class Material(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String, nullable=True)
-    filename = Column(String) # Ścieżka do zapisanego zasobu na dysku
+     # Ścieżka do zdjęcia na dysku
+    filename = Column(String)
     upload_date = Column(DateTime, default=datetime.datetime.utcnow)
     
-    # Metadane i struktura hierarchiczna
+    # Struktura hierarchiczna
     category = Column(String, index=True)
 
-    # Indeksowanie dla przyśpieszenia wyszukiwania po lokalizacji
+    # Lokalizacja
     location_lat = Column(Float, index=True, nullable=True) 
     location_lng = Column(Float, index=True, nullable=True)
+
+    # Okres historyczny
     historical_period = Column(String, nullable=True)
     
     # Powiązanie z autorem (twórcą) wpisu

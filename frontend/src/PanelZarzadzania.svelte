@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { tokenJWT, rolaUzytkownika } from "./store.js";
 
-    // Komponent do dodawania i edycji materiałów przez Twórcę
+    // Moduł odpowiedzialny za panel Twórcy gdzie może dodawać i edytować swoje materiały
 
     // ================= Zmienne stanu =================
 
@@ -33,10 +33,10 @@
 
     // Funkcja obsługująca kliknięcie "Wyślij" pod formularzem "Dodaj"
     async function wyslijFormularz(event) {
-        // Żeby formularz nie odświeżał całej strony
+        // Zabezpieczenie przed przeładowaniem strony HTML
         event.preventDefault();
 
-        // Pakowanie pliku i danych przez zwykły FormData
+        // Pakowanie pliku i danych przez FormData
         const formularzData = new FormData();
 
         formularzData.append("title", tytul);
@@ -68,7 +68,7 @@
                 lat = "";
                 lng = "";
                 plik = null;
-                // Odświeżenie listy, żeby nowy plik sie na niej pojawił
+                // Odświeżenie listy, żeby nowy plik sie pojawił
                 pobierzMojeMaterialy();
             } else {
                 // Komunikat błędu z backendu
@@ -84,13 +84,14 @@
 
     // Funkcja pobierająca materiały zalogowanego twórcy
     async function pobierzMojeMaterialy() {
-        if (!$tokenJWT) return; // Sprawdzenie tokena
+        // Sprawdzenie tokena
+        if (!$tokenJWT) return;
 
         try {
-            // URL zależy od roli - Twórca pobiera tylko swoje, Admin pobiera wszystkie z bazy danych
+            // Twórca pobiera tylko swoje, Admin pobiera wszystkie z bazy danych
             const endpointUrl =
                 $rolaUzytkownika === "Administrator"
-                    ? "http://localhost:8000/materials/?limit=500" // TODO: jaki dać limit i czy dawać?
+                    ? "http://localhost:8000/materials/?limit=100"
                     : "http://localhost:8000/materials/my";
 
             // Pobranie materiałów z API
@@ -117,7 +118,7 @@
         pobierzMojeMaterialy();
     });
 
-    // Funkcja do usuwania autorskich wpisów bez przeładowania strony
+    // Funkcja do usuwania autorskich wpisów
     async function usunMaterial(id) {
         if (
             !confirm(
@@ -138,7 +139,6 @@
             );
 
             if (odpowiedz.ok) {
-                // Usunięcie wpisu ze stanu
                 mojeMaterialy = mojeMaterialy.filter((m) => m.id !== id);
                 alert("Zdjęcie zostało usunięte z systemu!");
             } else {
@@ -152,7 +152,7 @@
 
     // ================= Funkcje od edycji materiałów =================
 
-    // Otwiera mały formularz do wpisywania poprawek pod zdjęciem
+    // Otwiera formularz do wpisywania poprawek pod zdjęciem
     function zacznijEdycje(material) {
         edytowanyMaterialId = material.id;
         edycjaTytul = material.title;
@@ -162,13 +162,13 @@
     }
 
     function anulujEdycje() {
-        // Zamknięcie małego formularza
+        // Zamknięcie formularza
         edytowanyMaterialId = null;
     }
 
-    // Funkcja do fizycznego wysyłania zmian przez twórcę (same dane tekstowe).
+    // Funkcja do wysyłania zmian przez twórcę (same dane tekstowe).
     async function zapiszEdycje(id) {
-        // Przygotowujemy zwykły obiekt JSON
+        // Przygotowanie zwykłego obiektu JSON
         const noweDane = {
             title: edycjaTytul,
             category: edycjaKategoria,
@@ -212,10 +212,7 @@
 
     // Funkcja do blokowania użytkownika przez admina
     async function zablokujUzytkownika(userId) {
-        if (
-            !confirm("Ostrzeżenie! Czy na pewno chcesz zablokować użytkownika?")
-        )
-            return;
+        if (!confirm("Czy na pewno chcesz zablokować użytkownika?")) return;
 
         try {
             const odpowiedz = await fetch(
@@ -241,14 +238,14 @@
 </script>
 
 <div class="row justify-content-center mt-4">
-    <div class="col-12 col-xl-10">
-        <h3 class="mb-4">
+    <div class="col-12">
+        <h2 class="h3 mb-4">
             {$rolaUzytkownika === "Administrator"
                 ? "Moderacja Cyfrowego Archiwum"
                 : "Panel Twórcy Archiwum"}
-        </h3>
+        </h2>
 
-        <!-- Zakładki Nawigacyjne z wykorzystaniem Bootstrapa 5 -->
+        <!-- Zakładki nawigacyjne -->
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <button
@@ -419,12 +416,18 @@
         {:else if aktywnaZakladka === "zarzadzaj"}
             <div class="card shadow-sm border-0">
                 <div class="card-body py-4">
-                    <button
-                        class="btn btn-outline-secondary btn-sm mb-3"
-                        on:click={pobierzMojeMaterialy}
-                    >
-                        Odśwież Listę
-                    </button>
+                    <div class="d-flex align-items-center mb-3">
+                        <button
+                            class="btn btn-secondary btn-sm"
+                            on:click={pobierzMojeMaterialy}
+                        >
+                            Odśwież Listę
+                        </button>
+                        <small class="text-muted ms-3">
+                            Materiały są wyświetlane w kolejności ich dodania
+                            (najnowsze na górze).
+                        </small>
+                    </div>
 
                     {#if mojeMaterialy.length === 0}
                         <div class="alert alert-info py-4 text-center">
@@ -523,14 +526,14 @@
                                             <tr class="table-warning">
                                                 <td colspan="4" class="p-3">
                                                     <div
-                                                        class="border rounded p-3 bg-white shadow-sm"
+                                                        class="border rounded p-3 bg-body shadow-sm"
                                                     >
-                                                        <h6
-                                                            class="text-muted fw-bold mb-3"
+                                                        <h3
+                                                            class="text-body-secondary fw-bold mb-3"
                                                         >
-                                                            # Tryb Edycji
+                                                            Tryb Edycji
                                                             Metadanych
-                                                        </h6>
+                                                        </h3>
                                                         <div class="row">
                                                             <div
                                                                 class="col-md-6 mb-2"

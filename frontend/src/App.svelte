@@ -1,5 +1,9 @@
 <script>
-    // Importowanie bibliotek i pamięci globalnej aplikacji
+    // Główny komponent aplikacji frontendowej.
+    // Wyświetla pasek nawigacji, obsługuje logowanie Google i przełączanie widoków (Galeria / Panel Twórcy).
+    // Łączy ze sobą filtry z Wyszukiwarki i Mapy i przekazuje je do Galerii.
+
+    // Importowanie bibliotek i pamięci globalnej
     import { onMount } from "svelte";
     import { tokenJWT, rolaUzytkownika, emailUzytkownika } from "./store.js";
     import Galeria from "./Galeria.svelte";
@@ -8,7 +12,7 @@
     import Mapa from "./Mapa.svelte";
     import MotywyWCAG from "./MotywyWCAG.svelte";
 
-    let imieProjektu = "Cyfrowe Archiwum Społecznościowe";
+    let nazwaStrony = "Cyfrowe Archiwum Społecznościowe";
 
     // Zmienna przechowująca informację, w której zakładce obecnie znajduje się strona
     let aktywnaStrona = "galeria";
@@ -27,23 +31,23 @@
     // Zmienna przechowująca materiały pobrane przez galerię do pokazania na mapie
     let pobraneMaterialy = [];
 
-    // Zmiana filtrów od Wyszukiwarki
+    // Callback przechwytujący wywołanie funkcji przez Wyszukiwarkę
     function obslugujZmianeFiltrow(nowePolaFiltracyjnie) {
         // Łączenie filtrów tekstowych z filtrami współrzędnych
         aktywneFiltry = { ...aktywneFiltry, ...nowePolaFiltracyjnie };
     }
 
-    // Aktualizacja obszaru z Mapy
+    // Callback przechwytujący wywołanie od mapy z jej obszarem
     function obslugujZmianeMapy(koordynaty) {
         aktywneFiltry = { ...aktywneFiltry, ...koordynaty };
     }
 
-    // Odbiór listy zdjęć od komponentu Galerii
+    // Callback przechwytujący od galerii przefiltrowaną listę zdjęć pobranych z BD
     function obslugujPobraneMaterialy(materialy) {
         pobraneMaterialy = materialy;
     }
 
-    // Funkcja ułatwiająca zmianę zakładek w HTML
+    // Funkcja od zmiany zakładek w HTML
     function zmienStrone(nowaStrona) {
         aktywnaStrona = nowaStrona;
     }
@@ -68,14 +72,14 @@
                 // Wyczyść pojemnik HTML po wylogowaniu
                 pojemnik.innerHTML = "";
 
-                // Generowanie przycisku wewnątrz div
+                // Generowanie przycisku wewnątrz diva
                 window.google.accounts.id.renderButton(pojemnik, {
                     theme: "outline",
                     size: "large",
                     text: "signin_with",
                 });
             }
-        }, 100); // próbuj co 0.1s aż się uda, po czym przestań.
+        }, 100); // próbuj co 0.1s
     }
 
     onMount(() => {
@@ -98,7 +102,7 @@
                 // Zapis tokenu JWT do pamięci aplikacji
                 $tokenJWT = dane_z_backendu.access_token;
 
-                // Odkodowanie tokena z użyciem atob(), by wyświetlić na pasku Imię i Rolę
+                // Odkodowanie tokena, by wyświetlić na pasku Imię i Rolę
                 const rozkodowane = JSON.parse(atob($tokenJWT.split(".")[1]));
                 $emailUzytkownika = rozkodowane.sub;
                 $rolaUzytkownika = rozkodowane.role;
@@ -115,7 +119,7 @@
         }
     }
 
-    // Funkcja Wyloguj, po prostu czyści klucze
+    // Funkcja Wyloguj, po prostu czyści zmienne
     function wyloguj() {
         $tokenJWT = null;
         $rolaUzytkownika = "Przeglądający";
@@ -129,77 +133,63 @@
     }
 </script>
 
-<!-- Pasek nawigacyjny u góry strony -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="#">{imieProjektu}</a>
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarText"
-            aria-controls="navbarText"
-            aria-expanded="false"
-            aria-label="Przełącz nawigację"
-        >
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarText">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <!-- Klasa 'active' pogrubia tekst aktywnej zakładki -->
-                    <a
-                        class="nav-link {aktywnaStrona === 'galeria'
-                            ? 'active'
-                            : ''}"
-                        href="#"
-                        on:click={() => zmienStrone("galeria")}
-                    >
-                        Kolekcja Zdjęć
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
-                        class="nav-link {aktywnaStrona === 'tworca'
-                            ? 'active'
-                            : ''}"
-                        href="#"
-                        on:click={() => zmienStrone("tworca")}
-                    >
-                        Panel Twórcy / Admina
-                    </a>
-                </li>
-            </ul>
+<!-- Pasek nawigacyjny -->
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container d-flex align-items-center">
+        <a class="navbar-brand" href="#">{nazwaStrony}</a>
+        <ul class="navbar-nav d-flex flex-row me-auto gap-3">
+            <li class="nav-item">
+                <!-- Klasa 'active' pogrubia tekst aktywnej zakładki -->
+                <a
+                    class="nav-link {aktywnaStrona === 'galeria'
+                        ? 'active'
+                        : ''}"
+                    href="#"
+                    on:click={() => zmienStrone("galeria")}
+                >
+                    Kolekcja Zdjęć
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    class="nav-link {aktywnaStrona === 'tworca'
+                        ? 'active'
+                        : ''}"
+                    href="#"
+                    on:click={() => zmienStrone("tworca")}
+                >
+                    Panel Twórcy / Admina
+                </a>
+            </li>
+        </ul>
 
-            <!-- Dodany na pasku przycisku zmiany motywu -->
-            <MotywyWCAG />
+        <!-- Dodany na pasku przycisku zmiany motywu -->
+        <MotywyWCAG />
 
-            <span class="navbar-text">
-                <!-- Logika Wyświetlania Profilu w Svelte -->
-                {#if $tokenJWT}
-                    <!-- Użytkownik jest zalogowany -->
-                    <span class="me-3 text-light"
-                        >Zalogowany(a): <strong
-                            >{$emailUzytkownika} ({$rolaUzytkownika})</strong
-                        ></span
-                    >
-                    <button
-                        class="btn btn-sm btn-outline-light"
-                        on:click={wyloguj}>Wyloguj</button
-                    >
-                {:else}
-                    <!-- Jeśli nie, wyświetl pusty pojemnik na guzik Google -->
-                    <div id="googleButtonContainer"></div>
-                {/if}
-            </span>
-        </div>
+        <span class="navbar-text">
+            <!-- Wyświetlanieinformacji o zalogowanym użytkowniku lub przycisku do zalogowania -->
+            {#if $tokenJWT}
+                <!-- Użytkownik jest zalogowany -->
+                <span class="me-3 text-light"
+                    >Zalogowany(a): <strong
+                        >{$emailUzytkownika} ({$rolaUzytkownika})</strong
+                    ></span
+                >
+                <button class="btn btn-sm btn-outline-light" on:click={wyloguj}
+                    >Wyloguj</button
+                >
+            {:else}
+                <!-- Jeśli nie, wyświetl pojemnik na przycisk Google -->
+                <div id="googleButtonContainer"></div>
+            {/if}
+        </span>
     </div>
 </nav>
 
 <main class="container mb-5">
     <div class="row mt-4 mb-3">
         <div class="col-12">
-            <h2 class="mb-3">Najnowsze materiały w zbiorach</h2>
+            <h1 class="mb-3">Najnowsze materiały w zbiorach</h1>
             <p class="text-muted">
                 Przeglądaj zebrane fotografie i dokumenty obrazujące historię
                 okolicy.
@@ -207,12 +197,12 @@
         </div>
     </div>
 
-    <!-- Warunek by wyświetlać odpowiednią stronę -->
+    <!-- Wyświetlanie odpowiedniej strony -->
     {#if aktywnaStrona === "galeria"}
-        <!-- Interaktywna mapa Leaflet -->
+        <!-- Mapa Leaflet -->
         <Mapa poZmianieMapy={obslugujZmianeMapy} materialy={pobraneMaterialy} />
 
-        <!-- Przesłanie funkcji do komponentu Wyszukiwarka -->
+        <!-- Wyszukiwarka -->
         <Wyszukiwarka poZmianieFiltru={obslugujZmianeFiltrow} />
 
         <Galeria
