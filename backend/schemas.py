@@ -2,7 +2,7 @@
 Plik odpowiedzialny za walidację danych przychodzących oraz mapowanie danych wychodzących z API.
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -14,8 +14,8 @@ class MaterialBase(BaseModel):
     title: str
     category: str
     description: Optional[str] = None
-    location_lat: Optional[float] = None
-    location_lng: Optional[float] = None
+    location_lat: Optional[float] = Field(None, ge=-90, le=90, description="Szerokość geograficzna od -90 do 90")
+    location_lng: Optional[float] = Field(None, ge=-180, le=180, description="Długość geograficzna od -180 do 180")
     historical_period: Optional[str] = None
 
 # Schemat do edycji zdjęcia.
@@ -24,8 +24,8 @@ class MaterialUpdate(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     historical_period: Optional[str] = None
-    location_lat: Optional[float] = None
-    location_lng: Optional[float] = None
+    location_lat: Optional[float] = Field(None, ge=-90, le=90, description="Szerokość geograficzna od -90 do 90")
+    location_lng: Optional[float] = Field(None, ge=-180, le=180, description="Długość geograficzna od -180 do 180")
 
 # Filtr sprawdzający dane z formularza "Dodaj Zdjęcie" wypełnianego przez Twórcę.
 class MaterialCreate(MaterialBase):

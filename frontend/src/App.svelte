@@ -59,12 +59,12 @@
         // Funkcja będzie co 100 milisekund sprawdzać, czy skrypt Google zdążył się już wgrać
         const probaRenderowania = setInterval(() => {
             const pojemnik = document.getElementById("googleButtonContainer");
-            if (window.google && pojemnik) {
+            if (window["google"] && pojemnik) {
                 // Zatrzymanie licznika po wyrenderowaniu przycisku
                 clearInterval(probaRenderowania);
 
                 // Konfiguracja panelu logowania Google
-                window.google.accounts.id.initialize({
+                window["google"].accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
                     callback: obslugaLogowaniaGoogle,
                 });
@@ -73,7 +73,7 @@
                 pojemnik.innerHTML = "";
 
                 // Generowanie przycisku wewnątrz diva
-                window.google.accounts.id.renderButton(pojemnik, {
+                window["google"].accounts.id.renderButton(pojemnik, {
                     theme: "outline",
                     size: "large",
                     text: "signin_with",
@@ -136,7 +136,7 @@
 <!-- Pasek nawigacyjny -->
 <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container d-flex align-items-center">
-        <a class="navbar-brand" href="#">{nazwaStrony}</a>
+        <a class="navbar-brand" href="/">{nazwaStrony}</a>
         <ul class="navbar-nav d-flex flex-row me-auto gap-3">
             <li class="nav-item">
                 <!-- Klasa 'active' pogrubia tekst aktywnej zakładki -->
@@ -144,8 +144,8 @@
                     class="nav-link {aktywnaStrona === 'galeria'
                         ? 'active'
                         : ''}"
-                    href="#"
-                    on:click={() => zmienStrone("galeria")}
+                    href="/#galeria"
+                    on:click|preventDefault={() => zmienStrone("galeria")}
                 >
                     Kolekcja Zdjęć
                 </a>
@@ -155,8 +155,8 @@
                     class="nav-link {aktywnaStrona === 'tworca'
                         ? 'active'
                         : ''}"
-                    href="#"
-                    on:click={() => zmienStrone("tworca")}
+                    href="/#tworca"
+                    on:click|preventDefault={() => zmienStrone("tworca")}
                 >
                     Panel Twórcy / Admina
                 </a>

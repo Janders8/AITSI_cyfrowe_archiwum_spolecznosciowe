@@ -85,7 +85,7 @@ def test_status_serwera():
 # Wskazanie ścieżki do pliku .env na frontendzie (tam jest klucz google)
 load_dotenv(dotenv_path="../frontend/.env")
 # Klucz z .env
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_ID = os.getenv("VITE_GOOGLE_CLIENT_ID")
 
 # Funkcja do weryfikacji tokenu Google, tworzenia nowego konta (jeśłi nie istnieje) oraz generowania tokenu JWT.
 @app.post("/auth/google", response_model=schemas.TokenResponse)

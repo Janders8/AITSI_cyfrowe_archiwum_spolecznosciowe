@@ -364,6 +364,8 @@
                                 <input
                                     type="number"
                                     step="any"
+                                    min="-90"
+                                    max="90"
                                     class="form-control"
                                     id="lat"
                                     bind:value={lat}
@@ -377,6 +379,8 @@
                                 <input
                                     type="number"
                                     step="any"
+                                    min="-180"
+                                    max="180"
                                     class="form-control"
                                     id="lng"
                                     bind:value={lng}
